@@ -45,6 +45,13 @@ class Network:
 			return None
 		return self.nodes[len(self)-1]
 
+	def add_connection(self, connect:list):
+		"""adds connection of first 2 elements with 3rd element difficulty
+		if no difficulty, defaults to 10
+		"""
+		#todo
+		pass
+		
 	def find_shortest_path(self, nodelist:list):
 		"""finds shortest path going through all nodes in list"""
 		#todo implement it
@@ -119,11 +126,11 @@ class Network:
 		if not Network.is_net(othernet):
 			return None
 		returnnet = Network(None)
-		print('lenofself:', len(self))
-		print('returnnet:', returnnet)
+		# print('lenofself:', len(self))
+		# print('returnnet:', returnnet)
 		for node in self:
 			returnnet.add_node(node.name, node.difficulty)
-		print(returnnet)
+		# print(returnnet)
 		for i, node in enumerate(othernet):
 			# print(returnnet)
 			# print(node.difficulty)
