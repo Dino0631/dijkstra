@@ -2,7 +2,8 @@
 Dino0631
 Dijstra network algorthm
 """
-import math
+import operator
+from math import *
 from copy import deepcopy
 class Node():
 	"""docstring for Node"""
@@ -16,11 +17,19 @@ class Node():
 		self.id = nodeid# Node.nextid
 		Node.nextid += 1
 
-	def connected_to(node):
+	@property
+	def sorteddiff(self):
+		sorted_diff = sorted(self.difficulty.items(), key=operator.itemgetter(1))
+		# print('sorteddiff', sorted_diff)
+		sortednodes = list(map(lambda x:x[0], sorted_diff))
+		return sortednodes
+
+
+	def connected_to(self,node):
 		return self.network == node.network and node.id in self.difficulty
 
 	def __str__(self):
-		connections = list(map(lambda x:str(x), list(node.difficulty.keys())))
+		connections = list(map(lambda x:str(x), list(self.difficulty.keys())))
 		return 'net[{}] [{}] {}, connections: {}'.format(
 			self.network, self.id, self.name,', '.join(connections))
 
@@ -45,17 +54,73 @@ class Network:
 			return None
 		return self.nodes[len(self)-1]
 
-	def add_connection(self, connect:list):
-		"""adds connection of first 2 elements with 3rd element difficulty
+	def add_connection(self, indexes, diff=10):
+		"""adds connection of first arg's  with 3rd arg difficulty
 		if no difficulty, defaults to 10
 		"""
-		#todo
-		pass
-		
+		for index in indexes:
+			for i in indexes:
+				if i != index:
+					self[index].difficulty[i] = diff
+
+
+	def find_node(self,currentpath:list,destination, pathsexhausted):
+		pathlist = []
+		# print('current', currentpath)
+		# print('dest', destination)
+		current = currentpath[-1]
+		if destination in self[current].difficulty:
+			return currentpath + [destination]
+		else:
+			for nodenum in self[current].sorteddiff:
+				path = currentpath + [nodenum]
+				# print(self[nodenum])
+				# print('length', len(self[nodenum].difficulty), self[nodenum].difficulty)
+				if len(self[nodenum].difficulty) == 1: #if dead end
+					# print('continue', nodenum)
+					continue
+				if nodenum in currentpath: #if already been there
+					continue
+				bing = self.find_node(path, destination, pathsexhausted)
+				# if current in bing:
+				# 	return None
+				if bing in pathsexhausted:
+					continue
+				return bing
+		return None
+
+	def find_allpaths(self, nodelist:list):
+		"""finds shortest path going through all(for now just 2) nodes in list"""
+		allpaths = []
+		path =  self.find_node([nodelist[0]],nodelist[1], allpaths)
+		while path != None:
+			allpaths.append(path)
+			path =  self.find_node([nodelist[0]],nodelist[1], allpaths)
+			# print('penis', path)
+			# print('bean', allpaths)
+		# print('allpaths:', allpaths)
+		return allpaths
+
 	def find_shortest_path(self, nodelist:list):
-		"""finds shortest path going through all nodes in list"""
-		#todo implement it
-		pass
+		"""finds shortest path going through all(for now just 2) nodes in list"""
+		allpaths = self.find_allpaths(nodelist)
+		shortestpath = allpaths[0]
+		for path in allpaths[1:]:
+			if self.path_difficulty(shortestpath) > self.path_difficulty(path):
+				shortestpath = path
+		return shortestpath, self.path_difficulty(shortestpath)
+
+
+	def path_difficulty(self, nodelist:list):
+		full_difficulty = 0
+		n = 0
+		for node in nodelist[:-1]:
+			if nodelist[n+1] not in self[nodelist[n]].difficulty:
+				return inf
+			full_difficulty += self[nodelist[n]].difficulty[nodelist[n+1]]
+			n+=1
+		return full_difficulty
+		
 
 	def get_node_by_name(self, name:str):
 		for i, node in enumerate(self.nodes):
@@ -64,7 +129,7 @@ class Network:
 		return -1
 
 	def add_node(self, name:str, nodedifficulty:dict):
-		print(nodedifficulty)
+		# print(nodedifficulty)
 		nextid = len(self)
 		# print('nextid:', nextid)
 		for nodeindex in nodedifficulty:
@@ -151,11 +216,33 @@ roads.add_node('P13', {0:10})
 roads.add_node('Q12', {0:10})
 roads.add_node('Q13', {1:10,2:10})
 roads.add_node('13thRail', {2:2, 3:2})
-print(len(roads))
-print(str(roads))
+# print(len(roads))
+# print(str(roads))
 roads2 = Network()
 roads2.add_node('P14', {})
 roads2.add_node('Q14', {0:10})
-print(len(roads2))
+roads2 = roads + roads2
+roads2.add_node('16thRail', {4:25})
+roads2.add_connection([3,6])
+roads2.add_connection([1,5])
+print('difficulty:', roads2.path_difficulty([0,1,3,4]))
 print(roads2)
-print(roads+roads2)
+directions, difficulty = roads2.find_shortest_path([0,7])
+print('shortest path:', directions, 'difficulty:', difficulty)
+# print(len(roads2))
+# print(roads2)
+# directions, difficulty = roads2.find_shortest_path([0,7])
+# print(directions)
+roads3 = Network()
+roads3.add_node('key', {})
+roads3.add_node('parrot', {})
+roads3.add_node('bean2', {0:10})
+roads3.add_node('bean', {0:10})
+roads3.add_node('cave', {3:10})
+roads3.add_node('car', {4:10})
+roads3.add_node('bee', {5:10})
+roads3.add_node('bar', {6:10, 1:10})
+# print(roads3)
+# directions = roads3.find_shortest_path([0,1])
+# print(directions)
+# print(roads+roads2)
